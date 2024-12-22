@@ -1,0 +1,31 @@
+{
+  "flutter": {
+    "platforms": {
+      "macos": {
+        "default": {
+          "projectId": "planning-poker-87b21",
+          "appId": "1:954036644445:ios:be1ab00290a897e65bbbb4",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "planning-poker-87b21",
+          "configurations": {
+            "macos": "1:954036644445:ios:be1ab00290a897e65bbbb4",
+            "web": "1:954036644445:web:157463ad1d131b2c5bbbb4"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
