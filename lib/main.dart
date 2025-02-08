@@ -10,8 +10,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // DataUser().email = 'leju1712@gmail.com';
-  // DataUser().name = 'Pepe';
+  // DataUser().email = 'leandrococchi.acidlabs@latam.com';
+  // DataUser().name = 'Leandro';
   // DataUser().avatar = '';
   // DataUser().isLogin = true;
   runApp(const MyApp());

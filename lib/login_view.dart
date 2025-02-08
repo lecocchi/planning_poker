@@ -3,166 +3,160 @@ import 'package:flutter/material.dart';
 import 'package:planning_poker/data_user.dart';
 import 'package:planning_poker/infraestructure/user_utils.dart';
 
-class LoginView extends StatefulWidget {
+class LoginView extends StatelessWidget {
   const LoginView({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
-}
-
-class _LoginViewState extends State<LoginView> {
-  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: Container(
-            width: 650,
-            height: 280,
-            decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(15),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Container(
+          width: 650,
+          height: 280,
+          decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: const BorderRadius.all(
+                Radius.circular(15),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 1,
+                  blurRadius: 20,
+                  offset: const Offset(0, 3), // changes position of shadow
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 1,
-                    blurRadius: 20,
-                    offset: const Offset(0, 3), // changes position of shadow
-                  ),
+              ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const GradientText(
+                'Welcome to Planning Poker',
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                gradient: LinearGradient(colors: [
+                  Color.fromARGB(255, 231, 88, 83),
+                  Color.fromARGB(255, 19, 77, 163),
                 ]),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const GradientText(
-                  'Welcome to Planning Poker',
-                  style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-                  gradient: LinearGradient(colors: [
-                    Color.fromARGB(255, 231, 88, 83),
-                    Color.fromARGB(255, 19, 77, 163),
-                  ]),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    side: WidgetStateProperty.all<BorderSide>(
-                        BorderSide(color: Colors.grey[200]!)),
-                    backgroundColor: WidgetStateProperty.all<Color>(
-                        const Color.fromARGB(255, 255, 255, 255)),
-                    foregroundColor:
-                        WidgetStateProperty.all<Color>(Colors.white),
-                    maximumSize: WidgetStateProperty.all(
-                      const Size(300, 60),
-                    ),
-                    minimumSize: WidgetStateProperty.all(
-                      const Size(300, 60),
-                    ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              ElevatedButton(
+                style: ButtonStyle(
+                  side: WidgetStateProperty.all<BorderSide>(
+                      BorderSide(color: Colors.grey[200]!)),
+                  backgroundColor: WidgetStateProperty.all<Color>(
+                      const Color.fromARGB(255, 255, 255, 255)),
+                  foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+                  maximumSize: WidgetStateProperty.all(
+                    const Size(300, 60),
                   ),
-                  onPressed: () async {
-                    // ignore: use_build_context_synchronously
-                    Navigator.of(context).pushNamed('/home');
+                  minimumSize: WidgetStateProperty.all(
+                    const Size(300, 60),
+                  ),
+                ),
+                onPressed: () async {
+                  // ignore: use_build_context_synchronously
+                  // Navigator.of(context).pushNamed('/home');
 
-                    User? user = await signInWithGoogle();
+                  UserCredential? userCredential = await signInWithGoogle();
 
-                    if (user != null) {
-                      if (user.email!.contains("@latam.com")) {
-                        DataUser().email = user.email;
-                        DataUser().name = user.displayName!.split(' ')[0];
-                        DataUser().avatar = user.photoURL!;
-                        DataUser().isLogin = true;
+                  User? user = userCredential.user;
 
-                        // ignore: use_build_context_synchronously
-                        Navigator.of(context).pushNamed('/home');
-                      } else {
-                        // set up the button
-                        Widget okButton = TextButton(
-                          child: const Text("OK"),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        );
+                  if (user != null) {
+                    if (user.email!.contains("@latam.com")) {
+                      DataUser().email = user.email;
+                      DataUser().name = user.displayName!.split(' ')[0];
+                      DataUser().avatar = user.photoURL!;
+                      DataUser().isLogin = true;
 
-                        // set up the AlertDialog
-                        AlertDialog alert = AlertDialog(
-                          backgroundColor: Colors.white,
-                          title: const Text(
-                            "Email Inválido",
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
+                      // ignore: use_build_context_synchronously
+                      Navigator.of(context).pushNamed('/home');
+                    } else {
+                      // set up the button
+                      Widget okButton = TextButton(
+                        child: const Text("OK"),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      );
+
+                      // set up the AlertDialog
+                      AlertDialog alert = AlertDialog(
+                        backgroundColor: Colors.white,
+                        title: const Text(
+                          "Email Inválido",
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        content: const Row(
+                          children: [
+                            Text(
+                              "Debe ser un email del tipo ",
+                              style: TextStyle(fontSize: 20),
                             ),
-                          ),
-                          content: const Row(
-                            children: [
-                              Text(
-                                "Debe ser un email del tipo ",
-                                style: TextStyle(fontSize: 20),
+                            Text(
+                              "xxx@latam.com",
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.black54,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.italic,
                               ),
-                              Text(
-                                "xxx@latam.com",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.black54,
-                                  fontWeight: FontWeight.bold,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              )
-                            ],
-                          ),
-                          actions: [
-                            okButton,
+                            )
                           ],
-                        );
+                        ),
+                        actions: [
+                          okButton,
+                        ],
+                      );
 
-                        // show the dialog
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return alert;
-                          },
-                        );
-                      }
+                      // show the dialog
+                      showDialog(
+                        // ignore: use_build_context_synchronously
+                        context: context,
+                        builder: (BuildContext context) {
+                          return alert;
+                        },
+                      );
                     }
-                  },
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image(
-                        image: AssetImage('assets/images/google.png'),
-                        height: 40,
-                      ),
-                      SizedBox(
-                        width: 15,
-                      ),
-                      Text(
-                        'Sign In with Google',
-                        style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w600),
-                      )
-                    ],
-                  ),
+                  }
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image(
+                      image: AssetImage('assets/images/google.png'),
+                      height: 40,
+                    ),
+                    SizedBox(
+                      width: 15,
+                    ),
+                    Text(
+                      'Sign In with Google',
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w600),
+                    )
+                  ],
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Text(
-                  "Version 0.0.2",
-                  style: TextStyle(color: Colors.grey[400]!),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Text(
+                "Version 0.0.3",
+                style: TextStyle(color: Colors.grey[400]!),
+              ),
+            ],
           ),
         ),
       ),

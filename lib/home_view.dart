@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:planning_poker/data_user.dart';
+import 'package:planning_poker/infraestructure/firestore_repository.dart';
 import 'package:planning_poker/infraestructure/user_utils.dart';
 
 class HomeView extends StatelessWidget {
@@ -8,221 +9,266 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        body: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: SizedBox(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
-            child: Column(
-              children: [
-                const AppBar(),
-                const Title(),
-                const Divider(),
-                const SizedBox(
-                  height: 50,
-                ),
-                StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('users-vote')
-                      .snapshots(),
-                  builder: (context,
-                      AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                          snapshot) {
-                    if (!snapshot.hasData) {
-                      return const CircularProgressIndicator();
-                    }
+    var total = MediaQuery.of(context).size.height - 56.0;
 
-                    List<CardCustomer> list = snapshot.data!.docs
-                        .map((u) => CardCustomer(
-                              email: u.id,
-                              name: u.get('name'),
-                              value: u.get('voto'),
-                              url: u.get('urlAvatar'),
-                            ))
-                        .toList();
-
-                    return Wrap(
-                      children: list,
-                    );
-                  },
-                ),
-                const Spacer(),
-                const Puntaje(),
-              ],
+    return Scaffold(
+      // drawer: const Drawer(),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color.fromARGB(255, 179, 203, 180),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.favorite,
+              color: Colors.red,
+              size: 30,
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            Text(
+              'Bienvenido ${DataUser().name}',
+              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            const Icon(
+              Icons.favorite,
+              color: Colors.red,
+              size: 30,
+            )
+          ],
+        ),
+      ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          SizedBox(
+            height: total * 0.15,
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: const Title(),
             ),
           ),
-        ),
-        floatingActionButton: isUserAdmin(DataUser().email!)
-            ? StreamBuilder(
-                stream:
-                    FirebaseFirestore.instance.collection('show').snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        if (snapshot.data!.docs.first.get('isVisible'))
-                          FloatingActionButton(
-                            onPressed: () {
-                              FirebaseFirestore.instance
-                                  .collection('show')
-                                  .doc('visible')
-                                  .set({'isVisible': false});
-                            },
-                            backgroundColor: Colors.redAccent,
-                            child: const Icon(
-                              Icons.visibility_off,
-                              color: Colors.white,
-                              size: 30,
+          SizedBox(
+            height: total * 0.7,
+            child: SingleChildScrollView(
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: const Body(),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: total * 0.15,
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: const Puntaje(),
+            ),
+          )
+        ],
+      ),
+      floatingActionButton: isUserAdmin(DataUser().email!)
+          ? StreamBuilder(
+              stream: FirebaseFirestore.instance.collection('show').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (snapshot.data!.docs.first.get('isVisible'))
+                        FloatingActionButton(
+                          onPressed: () {
+                            FirebaseFirestore.instance
+                                .collection('show')
+                                .doc('visible')
+                                .set({'isVisible': false});
+                          },
+                          backgroundColor: Colors.redAccent,
+                          child: const Icon(
+                            Icons.visibility_off,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        )
+                      else
+                        FloatingActionButton(
+                          onPressed: () {
+                            FirebaseFirestore.instance
+                                .collection('show')
+                                .doc('visible')
+                                .set({'isVisible': true});
+                          },
+                          backgroundColor: Colors.lightBlue,
+                          child: const Icon(
+                            Icons.remove_red_eye,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      FloatingActionButton(
+                        onPressed: () {
+                          TextEditingController controller =
+                              TextEditingController();
+                          // set up the button
+                          Widget createButton = ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor:
+                                  WidgetStateProperty.all<Color>(Colors.blue),
+                              foregroundColor:
+                                  WidgetStateProperty.all<Color>(Colors.white),
+                              minimumSize: WidgetStateProperty.all(
+                                const Size(150, 50),
+                              ),
                             ),
-                          )
-                        else
-                          FloatingActionButton(
-                            onPressed: () {
+                            onPressed: () async {
+                              FirebaseFirestore.instance
+                                  .collection('histories')
+                                  .doc('QxvC82eRqvLNaFdhkYq4')
+                                  .set({
+                                'isActive': true,
+                                'title': controller.text
+                              });
+
                               FirebaseFirestore.instance
                                   .collection('show')
                                   .doc('visible')
                                   .set({'isVisible': true});
+
+                              var collection = FirebaseFirestore.instance
+                                  .collection('users-vote');
+                              var snapshots = await collection.get();
+
+                              for (var doc in snapshots.docs) {
+                                await doc.reference.delete();
+                              }
+
+                              // ignore: use_build_context_synchronously
+                              Navigator.pop(context);
                             },
-                            backgroundColor: Colors.lightBlue,
-                            child: const Icon(
-                              Icons.remove_red_eye,
-                              color: Colors.white,
-                              size: 30,
+                            child: const Text(
+                              'Crear',
+                              style: TextStyle(fontSize: 16),
                             ),
-                          ),
-                        const SizedBox(
-                          height: 20,
+                          );
+
+                          Widget cancelButton = ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStateProperty.all<Color>(
+                                  const Color.fromARGB(255, 223, 133, 108)),
+                              foregroundColor:
+                                  WidgetStateProperty.all<Color>(Colors.white),
+                              minimumSize: WidgetStateProperty.all(
+                                const Size(150, 50),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          );
+
+                          showGeneralDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              barrierLabel: MaterialLocalizations.of(context)
+                                  .modalBarrierDismissLabel,
+                              barrierColor: Colors.black45,
+                              transitionDuration:
+                                  const Duration(milliseconds: 200),
+                              pageBuilder: (BuildContext buildContext,
+                                  Animation animation,
+                                  Animation secondaryAnimation) {
+                                return AlertDialog(
+                                  shape: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(16.0)),
+                                  title: const Text(
+                                    'Crear una historia',
+                                    style: TextStyle(fontSize: 30),
+                                  ),
+                                  content: Container(
+                                    margin: const EdgeInsets.only(
+                                        top: 30, right: 15, left: 15),
+                                    width: 500,
+                                    height: 100,
+                                    child: TextField(
+                                      controller: controller,
+                                      decoration: const InputDecoration(
+                                          border: OutlineInputBorder(
+                                              borderSide:
+                                                  BorderSide(strokeAlign: 5)),
+                                          labelText: 'Título de la historia',
+                                          hintStyle:
+                                              TextStyle(color: Colors.grey),
+                                          hintText:
+                                              'Ingrese el título de la historia'),
+                                    ),
+                                  ),
+                                  actions: [cancelButton, createButton],
+                                );
+                              });
+                        },
+                        backgroundColor: Colors.lightGreen,
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
                         ),
-                        FloatingActionButton(
-                          onPressed: () {
-                            TextEditingController _controller =
-                                TextEditingController();
-                            // set up the button
-                            Widget createButton = ElevatedButton(
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    WidgetStateProperty.all<Color>(Colors.blue),
-                                foregroundColor: WidgetStateProperty.all<Color>(
-                                    Colors.white),
-                                minimumSize: WidgetStateProperty.all(
-                                  const Size(150, 50),
-                                ),
-                              ),
-                              onPressed: () async {
-                                FirebaseFirestore.instance
-                                    .collection('histories')
-                                    .doc('QxvC82eRqvLNaFdhkYq4')
-                                    .set({
-                                  'isActive': true,
-                                  'title': _controller.text
-                                });
-
-                                FirebaseFirestore.instance
-                                    .collection('show')
-                                    .doc('visible')
-                                    .set({'isVisible': true});
-
-                                var collection = FirebaseFirestore.instance
-                                    .collection('users-vote');
-                                var snapshots = await collection.get();
-
-                                for (var doc in snapshots.docs) {
-                                  await doc.reference.delete();
-                                }
-
-                                Navigator.pop(context);
-                              },
-                              child: const Text(
-                                'Crear',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            );
-
-                            Widget cancelButton = ElevatedButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(
-                                    const Color.fromARGB(255, 223, 133, 108)),
-                                foregroundColor: WidgetStateProperty.all<Color>(
-                                    Colors.white),
-                                minimumSize: WidgetStateProperty.all(
-                                  const Size(150, 50),
-                                ),
-                              ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: const Text(
-                                'Cancelar',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            );
-
-                            showGeneralDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                barrierLabel: MaterialLocalizations.of(context)
-                                    .modalBarrierDismissLabel,
-                                barrierColor: Colors.black45,
-                                transitionDuration:
-                                    const Duration(milliseconds: 200),
-                                pageBuilder: (BuildContext buildContext,
-                                    Animation animation,
-                                    Animation secondaryAnimation) {
-                                  return AlertDialog(
-                                    shape: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(16.0)),
-                                    title: const Text(
-                                      'Crear una historia',
-                                      style: TextStyle(fontSize: 30),
-                                    ),
-                                    content: Container(
-                                      margin: const EdgeInsets.only(
-                                          top: 30, right: 15, left: 15),
-                                      width: 500,
-                                      height: 100,
-                                      child: TextField(
-                                        controller: _controller,
-                                        decoration: const InputDecoration(
-                                            border: OutlineInputBorder(
-                                                borderSide:
-                                                    BorderSide(strokeAlign: 5)),
-                                            labelText: 'Título de la historia',
-                                            hintStyle:
-                                                TextStyle(color: Colors.grey),
-                                            hintText:
-                                                'Ingrese el título de la historia'),
-                                      ),
-                                    ),
-                                    actions: [cancelButton, createButton],
-                                  );
-                                });
-                          },
-                          backgroundColor: Colors.lightGreen,
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                          ),
-                        )
-                      ],
-                    );
-                  } else {
-                    return Container();
-                  }
-                },
-              )
-            : Container(),
-      ),
+                      )
+                    ],
+                  );
+                } else {
+                  return Container();
+                }
+              },
+            )
+          : Container(),
     );
   }
 }
 
-class AppBar extends StatelessWidget {
-  const AppBar({super.key});
+class Body extends StatelessWidget {
+  const Body({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('users-vote').snapshots(),
+      builder: (context,
+          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        List<CardCustomer> list = snapshot.data!.docs
+            .map((u) => CardCustomer(
+                  email: u.id,
+                  name: u.get('name'),
+                  value: u.get('voto'),
+                  url: u.get('urlAvatar'),
+                ))
+            .toList();
+
+        return Wrap(
+          children: list,
+        );
+      },
+    );
+  }
+}
+
+class AppBarCustomer extends StatelessWidget {
+  const AppBarCustomer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -294,7 +340,11 @@ class Title extends StatelessWidget {
               ),
             );
           } else {
-            return const CircularProgressIndicator();
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.lightBlue,
+              ),
+            );
           }
         },
       ),
@@ -330,9 +380,8 @@ class CardCustomer extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundImage: NetworkImage(url),
+            ImageNetwork(
+              url: url,
             ),
             const SizedBox(
               height: 10,
@@ -378,6 +427,31 @@ class CardCustomer extends StatelessWidget {
   }
 }
 
+class ImageNetwork extends StatelessWidget {
+  const ImageNetwork({
+    super.key,
+    this.url = '',
+  });
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: 30,
+      backgroundImage: _getImageFromUrl(url),
+    );
+  }
+
+  ImageProvider _getImageFromUrl(String url) {
+    return Image.network(
+      url,
+      errorBuilder: (context, error, stackTrace) =>
+          Image.asset('assets/images/user.png'),
+    ).image;
+  }
+}
+
 class Puntaje extends StatelessWidget {
   const Puntaje({super.key});
 
@@ -385,53 +459,55 @@ class Puntaje extends StatelessWidget {
   Widget build(BuildContext context) {
     List<String> numbers = ["0.5", "1", "2", "3", "5", "8"];
 
-    return StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('show').snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Container();
-          }
+    return Center(
+      child: StreamBuilder(
+          stream: FirebaseFirestore.instance.collection('show').snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container();
+            }
 
-          bool isVisible = snapshot.data!.docs.first.get('isVisible');
+            bool isVisible = snapshot.data!.docs.first.get('isVisible');
 
-          if (isVisible) {
-            return const Average();
-          } else {
-            return Wrap(
-              children: numbers
-                  .map((n) => Container(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 50, horizontal: 25),
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color>(
-                                const Color.fromARGB(255, 179, 203, 180)),
-                            foregroundColor: WidgetStateProperty.all<Color>(
-                                const Color.fromARGB(255, 0, 0, 0)),
-                            minimumSize: WidgetStateProperty.all(
-                              const Size(100, 75),
+            if (isVisible) {
+              return const Average();
+            } else {
+              return Wrap(
+                children: numbers
+                    .map((n) => Container(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 25),
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStateProperty.all<Color>(
+                                  const Color.fromARGB(255, 179, 203, 180)),
+                              foregroundColor: WidgetStateProperty.all<Color>(
+                                  const Color.fromARGB(255, 0, 0, 0)),
+                              minimumSize: WidgetStateProperty.all(
+                                const Size(100, 75),
+                              ),
                             ),
+                            child: Text(
+                              n,
+                              style: const TextStyle(fontSize: 30),
+                            ),
+                            onPressed: () {
+                              FirebaseFirestore.instance
+                                  .collection('users-vote')
+                                  .doc(DataUser().email)
+                                  .set({
+                                'name': DataUser().name,
+                                'voto': n,
+                                'urlAvatar': DataUser().avatar,
+                              });
+                            },
                           ),
-                          child: Text(
-                            n,
-                            style: const TextStyle(fontSize: 30),
-                          ),
-                          onPressed: () {
-                            FirebaseFirestore.instance
-                                .collection('users-vote')
-                                .doc(DataUser().email)
-                                .set({
-                              'name': DataUser().name,
-                              'voto': n,
-                              'urlAvatar': DataUser().avatar,
-                            });
-                          },
-                        ),
-                      ))
-                  .toList(),
-            );
-          }
-        });
+                        ))
+                    .toList(),
+              );
+            }
+          }),
+    );
   }
 }
 
