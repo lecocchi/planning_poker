@@ -70,7 +70,7 @@ class LoginView extends StatelessWidget {
 
                   if (user != null) {
                     if (user.email!.contains("@latam.com")) {
-                      DataUser().email = user.email;
+                      DataUser().email = user.email!;
                       DataUser().name = user.displayName!.split(' ')[0];
                       DataUser().avatar = user.photoURL!;
                       DataUser().isLogin = true;
@@ -153,7 +153,7 @@ class LoginView extends StatelessWidget {
                 height: 20,
               ),
               Text(
-                "Version 0.0.3",
+                "Version 0.0.4",
                 style: TextStyle(color: Colors.grey[400]!),
               ),
             ],

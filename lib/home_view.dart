@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:planning_poker/data_user.dart';
-import 'package:planning_poker/infraestructure/firestore_repository.dart';
 import 'package:planning_poker/infraestructure/user_utils.dart';
 
 class HomeView extends StatelessWidget {
@@ -9,8 +8,6 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var total = MediaQuery.of(context).size.height - 56.0;
-
     return Scaffold(
       // drawer: const Drawer(),
       appBar: AppBar(
@@ -43,34 +40,15 @@ class HomeView extends StatelessWidget {
         ),
       ),
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          SizedBox(
-            height: total * 0.15,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              child: const Title(),
-            ),
-          ),
-          SizedBox(
-            height: total * 0.7,
-            child: SingleChildScrollView(
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                child: const Body(),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: total * 0.15,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width,
-              child: const Puntaje(),
-            ),
-          )
+      body: ListView(
+        children: const [
+          Title(),
+          Divider(),
+          Fotter(),
+          Body(),
         ],
       ),
-      floatingActionButton: isUserAdmin(DataUser().email!)
+      floatingActionButton: isUserAdmin(DataUser().email)
           ? StreamBuilder(
               stream: FirebaseFirestore.instance.collection('show').snapshots(),
               builder: (context, snapshot) {
@@ -374,8 +352,8 @@ class CardCustomer extends StatelessWidget {
       elevation: 5,
       margin: const EdgeInsets.all(20),
       child: Container(
-        width: 170,
-        height: 190,
+        width: 150,
+        height: 160,
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -400,19 +378,17 @@ class CardCustomer extends StatelessWidget {
                 if (snapshot.hasData) {
                   bool isVisible = snapshot.data!.docs.first.get('isVisible');
 
-                  return (email == DataUser().email) || isVisible
-                      ? Text(
-                          value,
-                          style: const TextStyle(
-                              fontSize: 35,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 138, 96, 139)),
-                        )
-                      : const Icon(
-                          Icons.question_mark,
-                          size: 35,
-                          color: Color.fromARGB(255, 90, 67, 97),
-                        );
+                  bool isShow = (email == DataUser().email) || isVisible;
+
+                  return Text(
+                    isShow ? _decryptVote(email, value) : '?',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: isShow
+                            ? const Color.fromARGB(255, 18, 95, 31)
+                            : const Color.fromARGB(255, 136, 54, 244)),
+                  );
                 } else {
                   return const Center(
                     child: CircularProgressIndicator(),
@@ -438,7 +414,7 @@ class ImageNetwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
-      radius: 30,
+      radius: 20,
       backgroundImage: _getImageFromUrl(url),
     );
   }
@@ -452,61 +428,64 @@ class ImageNetwork extends StatelessWidget {
   }
 }
 
-class Puntaje extends StatelessWidget {
-  const Puntaje({super.key});
+class Fotter extends StatelessWidget {
+  const Fotter({super.key});
 
   @override
   Widget build(BuildContext context) {
     List<String> numbers = ["0.5", "1", "2", "3", "5", "8"];
 
     return Center(
-      child: StreamBuilder(
-          stream: FirebaseFirestore.instance.collection('show').snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Container();
-            }
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20, bottom: 20),
+        child: StreamBuilder(
+            stream: FirebaseFirestore.instance.collection('show').snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Container();
+              }
 
-            bool isVisible = snapshot.data!.docs.first.get('isVisible');
+              bool isVisible = snapshot.data!.docs.first.get('isVisible');
 
-            if (isVisible) {
-              return const Average();
-            } else {
-              return Wrap(
-                children: numbers
-                    .map((n) => Container(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 0, horizontal: 25),
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all<Color>(
-                                  const Color.fromARGB(255, 179, 203, 180)),
-                              foregroundColor: WidgetStateProperty.all<Color>(
-                                  const Color.fromARGB(255, 0, 0, 0)),
-                              minimumSize: WidgetStateProperty.all(
-                                const Size(100, 75),
+              if (isVisible) {
+                return const Average();
+              } else {
+                return Wrap(
+                  children: numbers
+                      .map((n) => Container(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 15),
+                            child: ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(
+                                    const Color.fromARGB(255, 185, 175, 231)),
+                                foregroundColor: WidgetStateProperty.all<Color>(
+                                    const Color.fromARGB(255, 0, 0, 0)),
+                                minimumSize: WidgetStateProperty.all(
+                                  const Size(75, 60),
+                                ),
                               ),
+                              child: Text(
+                                n,
+                                style: const TextStyle(fontSize: 25),
+                              ),
+                              onPressed: () {
+                                FirebaseFirestore.instance
+                                    .collection('users-vote')
+                                    .doc(DataUser().email)
+                                    .set({
+                                  'name': DataUser().name,
+                                  'voto': _encryptVote(DataUser().email, n),
+                                  'urlAvatar': DataUser().avatar,
+                                });
+                              },
                             ),
-                            child: Text(
-                              n,
-                              style: const TextStyle(fontSize: 30),
-                            ),
-                            onPressed: () {
-                              FirebaseFirestore.instance
-                                  .collection('users-vote')
-                                  .doc(DataUser().email)
-                                  .set({
-                                'name': DataUser().name,
-                                'voto': n,
-                                'urlAvatar': DataUser().avatar,
-                              });
-                            },
-                          ),
-                        ))
-                    .toList(),
-              );
-            }
-          }),
+                          ))
+                      .toList(),
+                );
+              }
+            }),
+      ),
     );
   }
 }
@@ -523,15 +502,30 @@ class Average extends StatelessWidget {
           double total = 0;
           double average = 0;
           for (var u in snapshot.data!.docs) {
-            total = total + double.parse(u.get('voto'));
+            String value = _decryptVote(u.id, u.get('voto'));
+
+            total = total + double.parse(value);
             average = total / snapshot.data!.docs.length;
           }
 
           return Container(
-            padding: const EdgeInsets.only(bottom: 50),
-            child: Text(
-              'El promedio es: ${average.toStringAsFixed(1)}',
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'El promedio es: ',
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  average.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 255, 7, 48),
+                  ),
+                ),
+              ],
             ),
           );
         }
@@ -540,4 +534,16 @@ class Average extends StatelessWidget {
       },
     );
   }
+}
+
+String _encryptVote(String email, String vote) {
+  int sum = email.codeUnits.reduce((a, b) => a + b);
+  double result = sum + double.parse(vote);
+  return '$result';
+}
+
+String _decryptVote(String email, String voteEncript) {
+  int sum = email.codeUnits.reduce((a, b) => a + b);
+  double result = double.parse(voteEncript) - sum;
+  return '$result';
 }

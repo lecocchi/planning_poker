@@ -1,6 +1,10 @@
 # planning_poker
 
-A new Flutter project.
+Build web project: flutter build web
+Deploy firebase: firebase deploy
+Deploy firebase test: firebase hosting:channel:deploy test
+
+Request invalid: https://console.cloud.google.com/auth/clients/954036644445-nvf7g48igu3lnj85p6cigtruu4veolf7.apps.googleusercontent.com?inv=1&invt=AbpzxQ&project=planning-poker-87b21
 
 ## Getting Started
 

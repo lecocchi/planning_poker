@@ -1,5 +1,5 @@
 class DataUser {
-  String? email = '';
+  String email = '';
   String name = '';
   bool isLogin = false;
   String avatar = '';
